@@ -1,0 +1,55 @@
+global:
+  measurements:
+  - name: vmiLatency
+
+metricsEndpoints:
+  - metrics: [metrics-profile.yaml]
+    indexer:
+      type: opensearch
+      esServers: ["{{ .ES_SERVER }}"]
+      defaultIndex: {{ .ES_INDEX }}
+      insecureSkipVerify: true
+
+jobs:
+  - name: dv-source
+    jobType: create
+    jobIterations: {{.ITERATIONS}}
+    namespacedIterations: true
+    namespace: vm-density
+    qps: 20
+    burst: 20
+    maxWaitTimeout: 1h
+    jobPause: 2m
+    objects:
+    - objectTemplate: templates/dv-source.yml
+      replicas: 1
+      inputVars:
+        url: https://dl.fedoraproject.org/pub/fedora/linux/releases/41/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2
+        storage: 10Gi
+        storageclass: ocs-storagecluster-ceph-rbd
+        volumemode: Block
+    - objectTemplate: templates/dv-volsnap.yml
+      replicas: 1
+      inputVars:
+        volsnapclass: ocs-storagecluster-rbdplugin-snapclass
+  - name: virt-density
+    jobType: create
+    jobIterations: {{.ITERATIONS}}
+    qps: 20
+    burst: 20
+    namespacedIterations: true
+    namespace: vm-density
+    maxWaitTimeout: 6h
+    jobIterationDelay: 1m
+    jobPause: 1m
+    objects:
+    - objectTemplate: templates/vm-dvtemplate.yml
+      replicas: {{ .OBJ_REPLICAS }}
+      inputVars:
+        name: vm-dv-density
+        OS: fedora
+        cpuCores: 1
+        memory: 1G
+        storage: 10Gi
+        storageclass: ocs-storagecluster-ceph-rbd
+        volumemode: Block
