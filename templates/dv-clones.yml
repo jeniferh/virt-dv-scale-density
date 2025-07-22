@@ -1,0 +1,17 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: dvclone-{{.Replica}}
+spec:
+ source:
+   snapshot:
+     name: dv-volsnap
+     namespace: vm-density-{{.Iteration}}
+ storage:
+   accessModes:
+     - ReadWriteMany
+   resources:
+     requests:
+       storage: {{.storage}}
+   volumeMode: {{.volumemode}}
+   storageClassName: {{.storageclass}}
