@@ -1,0 +1,71 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  labels:
+    kubevirt-vm: vm-{{.name}}-{{.Replica}}
+  name: {{.name}}-{{.Replica}}
+spec:
+  ## controls if the VM boots up on creation:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt-vm: vm-{{.name}}-{{.Replica}}
+        kubevirt.io/os: {{.OS}}
+    spec:
+      domain:
+        ## vcpus:
+        cpu:
+          cores: {{.cpuCores}}
+       ## create 2 VM disks (rootdisk clone, cloudinit)
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: rootdisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          ## default network interface:
+          interfaces:
+          - masquerade: {}
+            model: virtio
+            name: default
+          networkInterfaceMultiqueue: true
+          rng: {}
+        ## VM memory size:
+        resources:
+          requests:
+            memory: {{.memory}}
+      ## default pod network:
+      networks:
+      - name: default
+        pod: {}
+      ## volume definitions for the VM disks:
+      volumes:
+      - dataVolume:
+          name: dvclone-{{.Replica}}
+        name: rootdisk
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            password: fedora
+            chpasswd: { expire: False }
+        name: cloudinitdisk
+  dataVolumeTemplates:
+  ## rootdisk:
+  - metadata:
+      name: dvclone-{{.Replica}}
+    spec:
+     source:
+       snapshot:
+        name: dv-volsnap
+        namespace: vm-density-{{.Iteration}}
+     storage:
+       accessModes:
+        - ReadWriteMany
+       resources:
+        requests:
+          storage: {{.storage}}
+       storageClassName: {{.storageclass}}
+       volumeMode: {{.volumemode}}
