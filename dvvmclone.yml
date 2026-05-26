@@ -24,7 +24,7 @@ jobs:
     - objectTemplate: templates/dv-source.yml
       replicas: 1
       inputVars:
-        url: https://dl.fedoraproject.org/pub/fedora/linux/releases/41/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2
+        url: https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2
         storage: 10Gi
         storageclass: ocs-storagecluster-ceph-rbd
         volumemode: Block
